@@ -170,7 +170,7 @@ export default function PainelFilaAtendimento() {
             🟢 LIBERADOS
           </h2>
 
-          {liberados.map((cliente, index) => (
+          {liberados.slice(-5).map((cliente, index) => (
             <div key={index} style={{
               background: "rgba(255,255,255,0.05)",
               padding: "15px",

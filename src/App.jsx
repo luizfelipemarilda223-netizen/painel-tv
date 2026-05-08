@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { ref, set, push } from "firebase/database";
 import { initializeApp } from "firebase/app";
 import { getDatabase, ref, onValue } from "firebase/database";
 
@@ -17,6 +18,7 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 export default function PainelFilaAtendimento() {
+  const [novoCliente, setNovoCliente] = useState("");
   const [espera, setEspera] = useState([]);
   const [liberados, setLiberados] = useState([]);
   const [chamando, setChamando] = useState("AGUARDANDO");
@@ -42,8 +44,118 @@ export default function PainelFilaAtendimento() {
     });
   }, []);
 
-  return (
-    <div style={{
+  const adicionarEspera = () => {
+  if (!novoCliente) return;
+  push(ref(db, "espera"), novoCliente);
+  setNovoCliente("");
+};
+
+const chamarCliente = () => {
+  if (espera.length === 0) return;
+
+  const cliente = espera[0];
+
+  set(ref(db, "chamando"), cliente);
+};
+
+const liberarCliente = () => {
+  if (!chamando || chamando === "AGUARDANDO") return;
+
+  push(ref(db, "liberados"), chamando);
+  set(ref(db, "chamando"), "AGUARDANDO");
+};
+
+return (
+    <>
+{window.location.pathname === "/admin" ? (
+<div style={{
+  minHeight: "100vh",
+  background: "#0f172a",
+  color: "white",
+  padding: "40px",
+  fontFamily: "Arial"
+}}>
+
+<h1 style={{ fontSize: "42px", marginBottom: "30px" }}>
+  Painel Administrativo
+</h1>
+
+<div style={{
+  background: "rgba(255,255,255,0.08)",
+  padding: "30px",
+  borderRadius: "20px",
+  maxWidth: "600px"
+}}>
+
+<input
+  value={novoCliente}
+  onChange={(e) => setNovoCliente(e.target.value)}
+  placeholder="Nome do cliente"
+  style={{
+    width: "100%",
+    padding: "18px",
+    fontSize: "22px",
+    borderRadius: "12px",
+    border: "none",
+    marginBottom: "20px"
+  }}
+/>
+
+<div style={{ display: "flex", gap: "15px", flexWrap: "wrap" }}>
+
+<button
+  onClick={adicionarEspera}
+  style={{
+    padding: "18px",
+    borderRadius: "12px",
+    border: "none",
+    background: "#eab308",
+    color: "black",
+    fontWeight: "bold",
+    fontSize: "18px",
+    cursor: "pointer"
+  }}
+>
+  Adicionar Espera
+</button>
+
+<button
+  onClick={chamarCliente}
+  style={{
+    padding: "18px",
+    borderRadius: "12px",
+    border: "none",
+    background: "#3b82f6",
+    color: "white",
+    fontWeight: "bold",
+    fontSize: "18px",
+    cursor: "pointer"
+  }}
+>
+  Chamar Cliente
+</button>
+
+<button
+  onClick={liberarCliente}
+  style={{
+    padding: "18px",
+    borderRadius: "12px",
+    border: "none",
+    background: "#22c55e",
+    color: "black",
+    fontWeight: "bold",
+    fontSize: "18px",
+    cursor: "pointer"
+  }}
+>
+  Liberar Cliente
+</button>
+
+</div>
+</div>
+</div>
+) : (
+<div style={{
       minHeight: "100vh",
       background: "linear-gradient(to bottom right, #0f172a, #172554, #020617)",
       color: "white",
@@ -170,7 +282,7 @@ export default function PainelFilaAtendimento() {
             🟢 LIBERADOS
           </h2>
 
-          {liberados.slice(-5).map((cliente, index) => (
+          {liberados.map((cliente, index) => (
             <div key={index} style={{
               background: "rgba(255,255,255,0.05)",
               padding: "15px",
@@ -241,5 +353,7 @@ export default function PainelFilaAtendimento() {
         </div>
       </div>
     </div>
+)}
+</>
   );
 }
